@@ -2,3 +2,4 @@
     remote = storage
 ['remote "storage"']
     url = s3://clerhp-ia/dvcstore
+    profile = greystruct-infra
