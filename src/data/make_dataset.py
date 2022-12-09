@@ -64,6 +64,71 @@ def fix_cdm_cdr(df):
     df.loc[cog_cm_cond, 'cdr_x'] /= 100
     df.loc[cog_cm_cond, 'cdr_y'] /= 100
 
+FEATURES = [
+     'floor_name',
+     'project_code',
+     'floor_code',
+     'slab_type',
+     'depth',
+     'floor_number',
+     'total_height',
+     'level',
+     'height',
+     'foundation_height',
+     'support_column',
+     'unsupported_column',
+     'walls_number',
+     'retaining_walls_number',
+     'inter_axis_distance',
+     'LL',
+     'DL',
+     'LL_max',
+     'DL_max',
+     'wind_load_x',
+     'wind_load_y',
+     'seismic_acc',
+     'double_height',
+     'flat_slab_area',
+     'waffle_slab_area',
+     'drop_panel_area',
+     'domes_area',
+     'support_area',
+     'shape_factor',
+     'x_length',
+     'y_length',
+     'stair_area',
+     'slope_area',
+     'walls_area',
+     'retaining_walls_area',
+     'foundation_type',
+     'concrete_m3_ratio',
+     'reinf_steel_ratio',
+     'domes_number',
+     'deflection_ratio',
+     'elasticiti_modulii',
+     'cdm_x',
+     'cdm_y',
+     'cdr_x',
+     'cdr_y',
+     'concrete_code',
+     'load_code',
+     'wind_code',
+     'seismic_code',
+     'support_mean_span_dist',
+     'support_max_span_dist',
+     'support_min_span_dist',
+     'cantilever_mean_dist',
+     'cantilever_max_dist',
+     'cantilever_min_dist',
+     'cantilever_area',
+     'span_dists',
+     'cantilever_dists',
+     'center_x',
+     'center_y',
+     'slab_total_area',
+     'triple_height'
+]
+
 @click.command()
 @click.argument('input_filepath', type=click.Path(exists=True))
 @click.argument('output_filepath', type=click.Path())
@@ -88,7 +153,7 @@ def main(input_filepath, output_filepath):
     print(f"Number of samples removed: {len(df) - len(processed_df)}")
     print(f"Number of projects removed: {len(df['project_code'].unique()) - len(processed_df['project_code'].unique())}")
     
-    processed_df.to_csv(Path(output_filepath) / 'structure_projects.csv', sep=';')
+    processed_df[FEATURES].to_csv(Path(output_filepath) / 'structure_projects.csv', sep=';')
     
 
 if __name__ == '__main__':
