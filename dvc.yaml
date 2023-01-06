@@ -1,0 +1,29 @@
+stages:
+  clean:
+    cmd: python src/data/make_clean.py data/raw data/processed
+    deps:
+    - data/raw
+    - src/data/make_clean.py
+    outs:
+    - data/processed
+  split:
+    cmd: python src/data/make_split.py data/processed data/split
+    deps:
+    - data/processed
+    - src/data/make_split.py
+    outs:
+    - data/split
+  agg:
+    cmd: python src/data/make_agg.py data/split data/agg
+    deps:
+    - data/split
+    - src/data/make_agg.py
+    outs:
+    - data/agg
+  features:
+    cmd: python src/features/build_features.py data/agg data/features
+    deps:
+    - data/agg
+    - src/features/build_features.py
+    outs:
+    - data/features
