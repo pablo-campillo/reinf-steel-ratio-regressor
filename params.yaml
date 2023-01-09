@@ -1,3 +1,6 @@
+clean:
+  originals: false
+  overground: false
 train:
   elasticnet:
     alpha: 0.1
@@ -17,5 +20,6 @@ train:
     gamma: 0.008
   mlpr:
     batch_size: 64
-    hidden_layer_sizes: [50]
+    hidden_layer_sizes:
+    - 50
     learning_rate_init: 0.01

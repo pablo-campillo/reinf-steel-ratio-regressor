@@ -4,6 +4,9 @@ stages:
     deps:
     - data/raw
     - src/data/make_clean.py
+    params:
+      - clean.originals
+      - clean.overground
     outs:
     - data/processed
   split:

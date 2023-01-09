@@ -2,6 +2,8 @@
 import click
 import logging
 from pathlib import Path
+
+import yaml
 from dotenv import find_dotenv, load_dotenv
 import pandas as pd
 
@@ -137,6 +139,17 @@ FEATURES = [
      'triple_height'
 ]
 
+
+def select_originals(df):
+    ori_cond1 = df['project_code'].str.contains('_C00_I00_H00_Q00_R00_V00_S00_O01')
+    ori_cond2 = df['project_code'].str.contains('_C00_I00_H00_Q00_R00_V00_S00_O01')
+    return df[ori_cond1 & ori_cond2]
+
+
+def remove_overground_floors(df):
+    return df[df['level'] > 0]
+
+
 @click.command()
 @click.argument('input_filepath', type=click.Path(exists=True))
 @click.argument('output_filepath', type=click.Path())
@@ -146,8 +159,17 @@ def main(input_filepath, output_filepath):
     """
     logger = logging.getLogger(__name__)
     logger.info('making final data set from raw data')
-    
+
+    params = yaml.safe_load(open("params.yaml"))["clean"]
+    originals = bool(params['originals'])
+    overground = bool(params['overground'])
+
     df = pd.read_csv(Path(input_filepath) / 'structure_projects.csv', sep=';')
+    if originals:
+        df = select_originals(df)
+    if overground:
+        df = remove_overground_floors(df)
+
     logger.info(f"Input Number of samples: {len(df)}")
     logger.info(f"Input Number of projects: {len(df['project_code'].unique())}")
     
