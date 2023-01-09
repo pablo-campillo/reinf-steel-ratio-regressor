@@ -28,6 +28,7 @@ def add_features(df):
     df['rwalls_area_mean_m2'] = df['rwalls_area_mean'] / df['slab_area_mean']
     
     df.loc[:, ['rwalls_area_mean', 'rwalls_area_mean_m2']] = df.loc[:, ['rwalls_area_mean', 'rwalls_area_mean_m2']].fillna(0)
+    df.loc[:, ['swall_area_mean', 'swall_area_mean_m2']] = df.loc[:, ['swall_area_mean', 'swall_area_mean_m2']].fillna(0)
     
     df['swall_area_ratio'] = df['swall_area'] / df['slab_total_area']
     df['col_area_ratio'] = df['column_area'] / df['slab_total_area']

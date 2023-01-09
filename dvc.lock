@@ -1,0 +1,274 @@
+schema: '2.0'
+stages:
+  clean:
+    cmd: python src/data/make_clean.py data/raw data/processed
+    deps:
+    - path: data/raw
+      md5: b227e8f754882b85605a61115afe4b94.dir
+      size: 129392857
+      nfiles: 3
+    - path: src/data/make_clean.py
+      md5: 1ddd2c3d2985e89a67c5c242077230cf
+      size: 6278
+    outs:
+    - path: data/processed
+      md5: 6ebd0c10b97f51e90b9f84647b4766bf.dir
+      size: 96878007
+      nfiles: 1
+  split:
+    cmd: python src/data/make_split.py data/processed data/split
+    deps:
+    - path: data/processed
+      md5: 6ebd0c10b97f51e90b9f84647b4766bf.dir
+      size: 96878007
+      nfiles: 1
+    - path: src/data/make_split.py
+      md5: 6eeb702f6d276dc2ca1d18c121a5f2f3
+      size: 2728
+    outs:
+    - path: data/split
+      md5: 4497371a032af067eaf3405a676c4000.dir
+      size: 97047147
+      nfiles: 2
+  agg:
+    cmd: python src/data/make_agg.py data/split data/agg
+    deps:
+    - path: data/split
+      md5: 4497371a032af067eaf3405a676c4000.dir
+      size: 97047147
+      nfiles: 2
+    - path: src/data/make_agg.py
+      md5: 39c23fe786860bc3962321cb8a45b737
+      size: 3485
+    outs:
+    - path: data/agg
+      md5: cea523ee187eaa3666a2e8b790868df1.dir
+      size: 821664
+      nfiles: 2
+  features:
+    cmd: python src/features/build_features.py data/agg data/features
+    deps:
+    - path: data/agg
+      md5: cea523ee187eaa3666a2e8b790868df1.dir
+      size: 821664
+      nfiles: 2
+    - path: src/features/build_features.py
+      md5: b03ef9fdc6ba73a58572a697c18673ec
+      size: 4412
+    outs:
+    - path: data/features
+      md5: d90861f08228a9962717b442378e6293.dir
+      size: 1814493
+      nfiles: 2
+  train_elasticnet:
+    cmd: PYTHONPATH=src python src/models/train_elasticnet.py data/features/train.csv
+      models/elasticnet
+    deps:
+    - path: data/features/train.csv
+      md5: 8e45c824c2a03436ec530a8157d434f7
+      size: 1631852
+    - path: src/models/train_elasticnet.py
+      md5: 17fffbea05589d736f53ee0dbec80fb1
+      size: 2429
+    params:
+      params.yaml:
+        train.elasticnet.alpha: 0.1
+        train.elasticnet.l1_ratio: 0.1
+    outs:
+    - path: models/elasticnet/model.pkl
+      md5: 1d2e7509d7c6120e83b425d51c5b77dd
+      size: 7161
+  eval_elasticnet:
+    cmd: PYTHONPATH=src python src/models/evaluate.py models/elasticnet/model.pkl
+      data/features/ eval/live/elasticnet/
+    deps:
+    - path: data/features/test.csv
+      md5: 97881ea9df0d45d7be8dbd84437263e7
+      size: 182641
+    - path: models/elasticnet/model.pkl
+      md5: 1d2e7509d7c6120e83b425d51c5b77dd
+      size: 7161
+    - path: src/models/evaluate.py
+      md5: c35707bead4e64d96a86a9f970c28849
+      size: 2425
+    outs:
+    - path: eval/live/elasticnet/metrics.json
+      md5: 97c4c7b83a313a8674fc23f10040c1f7
+      size: 184
+  train_hgbr:
+    cmd: PYTHONPATH=src python src/models/train_hgbr.py data/features/train.csv models/hgbr/
+    deps:
+    - path: data/features/train.csv
+      md5: 8e45c824c2a03436ec530a8157d434f7
+      size: 1631852
+    - path: src/models/train_hgbr.py
+      md5: 7011a73772f5f33cf6aaa80bcc2dc594
+      size: 3103
+    params:
+      params.yaml:
+        train.hgbr.l2_regularization: 0.015
+        train.hgbr.learning_rate: 0.13
+        train.hgbr.max_depth: 43
+        train.hgbr.max_leaf_nodes: 23
+        train.hgbr.min_samples_leaf: 20
+    outs:
+    - path: models/hgbr/model.pkl
+      md5: 81add891eb9913e0422938b3e9b03625
+      size: 359419
+  eval_hgbr:
+    cmd: PYTHONPATH=src python src/models/evaluate.py models/hgbr/model.pkl data/features/
+      eval/live/hgbr/
+    deps:
+    - path: data/features/test.csv
+      md5: 97881ea9df0d45d7be8dbd84437263e7
+      size: 182641
+    - path: models/hgbr/model.pkl
+      md5: 652061a60fd50c33a13881f8b2b4c573
+      size: 359419
+    - path: src/models/evaluate.py
+      md5: c35707bead4e64d96a86a9f970c28849
+      size: 2425
+    outs:
+    - path: eval/live/hgbr/metrics.json
+      md5: 23ce0a5733591d5840ac8800e83087fa
+      size: 184
+  evals@elasticnet:
+    cmd: PYTHONPATH=src python src/models/evaluate.py models/elasticnet/model.pkl
+      data/features/ eval/live/elasticnet/
+    deps:
+    - path: data/features/test.csv
+      md5: 97881ea9df0d45d7be8dbd84437263e7
+      size: 182641
+    - path: models/elasticnet/model.pkl
+      md5: 1d2e7509d7c6120e83b425d51c5b77dd
+      size: 7161
+    - path: src/models/evaluate.py
+      md5: c35707bead4e64d96a86a9f970c28849
+      size: 2425
+    outs:
+    - path: eval/live/elasticnet/metrics.json
+      md5: 97c4c7b83a313a8674fc23f10040c1f7
+      size: 184
+  evals@hgbr:
+    cmd: PYTHONPATH=src python src/models/evaluate.py models/hgbr/model.pkl data/features/
+      eval/live/hgbr/
+    deps:
+    - path: data/features/test.csv
+      md5: 97881ea9df0d45d7be8dbd84437263e7
+      size: 182641
+    - path: models/hgbr/model.pkl
+      md5: 81add891eb9913e0422938b3e9b03625
+      size: 359419
+    - path: src/models/evaluate.py
+      md5: c35707bead4e64d96a86a9f970c28849
+      size: 2425
+    outs:
+    - path: eval/live/hgbr/metrics.json
+      md5: 23ce0a5733591d5840ac8800e83087fa
+      size: 184
+  train_linearsvr:
+    cmd: PYTHONPATH=src python src/models/train_linearsvr.py data/features/train.csv
+      models/linearsvr
+    deps:
+    - path: data/features/train.csv
+      md5: 8e45c824c2a03436ec530a8157d434f7
+      size: 1631852
+    - path: src/models/train_linearsvr.py
+      md5: b64171941dcaed79c59c5e24528a2fc7
+      size: 2482
+    params:
+      params.yaml:
+        train.linearsvr.C: 0.05
+        train.linearsvr.epsilon: 0.09
+    outs:
+    - path: models/linearsvr/model.pkl
+      md5: 8b21d7f8cd68b9c7d3585c193c340fbd
+      size: 7114
+  evals@linearsvr:
+    cmd: PYTHONPATH=src python src/models/evaluate.py models/linearsvr/model.pkl data/features/
+      eval/live/linearsvr/
+    deps:
+    - path: data/features/test.csv
+      md5: 97881ea9df0d45d7be8dbd84437263e7
+      size: 182641
+    - path: models/linearsvr/model.pkl
+      md5: 8b21d7f8cd68b9c7d3585c193c340fbd
+      size: 7114
+    - path: src/models/evaluate.py
+      md5: c35707bead4e64d96a86a9f970c28849
+      size: 2425
+    outs:
+    - path: eval/live/linearsvr/metrics.json
+      md5: cfe01ca6111a7e55909e406d8199ab0f
+      size: 184
+  train_rbf:
+    cmd: PYTHONPATH=src python src/models/train_rbf.py data/features/train.csv models/rbf
+    deps:
+    - path: data/features/train.csv
+      md5: 8e45c824c2a03436ec530a8157d434f7
+      size: 1631852
+    - path: src/models/train_rbf.py
+      md5: 0f062ff1e7e05af5a84e34efa16573ea
+      size: 2481
+    params:
+      params.yaml:
+        train.rbf.C: 7
+        train.rbf.epsilon: 0.03
+        train.rbf.gamma: 0.008
+    outs:
+    - path: models/rbf/model.pkl
+      md5: ac009e6f3d24c7ef9a2a07d6d7c206f9
+      size: 637070
+  evals@rbf:
+    cmd: PYTHONPATH=src python src/models/evaluate.py models/rbf/model.pkl data/features/
+      eval/live/rbf/
+    deps:
+    - path: data/features/test.csv
+      md5: 97881ea9df0d45d7be8dbd84437263e7
+      size: 182641
+    - path: models/rbf/model.pkl
+      md5: ac009e6f3d24c7ef9a2a07d6d7c206f9
+      size: 637070
+    - path: src/models/evaluate.py
+      md5: c35707bead4e64d96a86a9f970c28849
+      size: 2425
+    outs:
+    - path: eval/live/rbf/metrics.json
+      md5: 133c21efadac37a2bbb9303b650e8307
+      size: 184
+  train_mlpr:
+    cmd: PYTHONPATH=src python src/models/train_mlpr.py data/features/train.csv models/mlpr
+    deps:
+    - path: data/features/train.csv
+      md5: 8e45c824c2a03436ec530a8157d434f7
+      size: 1631852
+    - path: src/models/train_mlpr.py
+      md5: da7e782d88365a25cc36dc9d1bf0c37d
+      size: 2976
+    params:
+      params.yaml:
+        train.mlpr.batch_size: 64
+        train.mlpr.hidden_layer_sizes:
+        - 50
+        train.mlpr.learning_rate_init: 0.01
+    outs:
+    - path: models/mlpr/model.pkl
+      md5: efa88511804de0a7ff00bc2de979928b
+      size: 220314
+  evals@mlpr:
+    cmd: PYTHONPATH=src python src/models/evaluate.py models/mlpr/model.pkl data/features/
+      eval/live/mlpr/
+    deps:
+    - path: data/features/test.csv
+      md5: 97881ea9df0d45d7be8dbd84437263e7
+      size: 182641
+    - path: models/mlpr/model.pkl
+      md5: efa88511804de0a7ff00bc2de979928b
+      size: 220314
+    - path: src/models/evaluate.py
+      md5: c35707bead4e64d96a86a9f970c28849
+      size: 2425
+    outs:
+    - path: eval/live/mlpr/metrics.json
+      md5: 3d06ce2631a7963055051268f9700f0c
+      size: 184

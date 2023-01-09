@@ -27,3 +27,79 @@ stages:
     - src/features/build_features.py
     outs:
     - data/features
+  train_elasticnet:
+    cmd: PYTHONPATH=src python src/models/train_elasticnet.py data/features/train.csv
+      models/elasticnet
+    deps:
+    - data/features/train.csv
+    - src/models/train_elasticnet.py
+    params:
+    - train.elasticnet.alpha
+    - train.elasticnet.l1_ratio
+    outs:
+    - models/elasticnet/model.pkl
+  train_hgbr:
+    cmd: PYTHONPATH=src python src/models/train_hgbr.py data/features/train.csv models/hgbr/
+    deps:
+    - data/features/train.csv
+    - src/models/train_hgbr.py
+    params:
+    - train.hgbr.learning_rate
+    - train.hgbr.max_depth
+    - train.hgbr.max_leaf_nodes
+    - train.hgbr.min_samples_leaf
+    - train.hgbr.l2_regularization
+    outs:
+    - models/hgbr/model.pkl
+  train_linearsvr:
+    cmd: PYTHONPATH=src python src/models/train_linearsvr.py data/features/train.csv
+      models/linearsvr
+    deps:
+      - data/features/train.csv
+      - src/models/train_linearsvr.py
+    params:
+      - train.linearsvr.C
+      - train.linearsvr.epsilon
+    outs:
+      - models/linearsvr/model.pkl
+  train_rbf:
+    cmd: PYTHONPATH=src python src/models/train_rbf.py data/features/train.csv
+      models/rbf
+    deps:
+      - data/features/train.csv
+      - src/models/train_rbf.py
+    params:
+      - train.rbf.C
+      - train.rbf.epsilon
+      - train.rbf.gamma
+    outs:
+      - models/rbf/model.pkl
+  train_mlpr:
+    cmd: PYTHONPATH=src python src/models/train_mlpr.py data/features/train.csv
+      models/mlpr
+    deps:
+      - data/features/train.csv
+      - src/models/train_mlpr.py
+    params:
+      - train.mlpr.batch_size
+      - train.mlpr.hidden_layer_sizes
+      - train.mlpr.learning_rate_init
+    outs:
+      - models/mlpr/model.pkl
+  evals:
+    foreach:
+      - elasticnet
+      - hgbr
+      - linearsvr
+      - rbf
+      - mlpr
+    do:
+      cmd: PYTHONPATH=src python src/models/evaluate.py models/${item}/model.pkl
+        data/features/ eval/live/${item}/
+      deps:
+      - data/features/test.csv
+      - models/${item}/model.pkl
+      - src/models/evaluate.py
+      metrics:
+      - eval/live/${item}/metrics.json:
+          cache: false
